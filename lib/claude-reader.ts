@@ -416,6 +416,63 @@ export async function readHistory(limit = 200): Promise<HistoryEntry[]> {
   return entries
 }
 
+// ─── Skills ───────────────────────────────────────────────────────────────────
+
+export interface SkillInfo {
+  name: string
+  description: string
+  triggers: string
+  hasSkillMd: boolean
+}
+
+export async function readSkills(): Promise<SkillInfo[]> {
+  const skillsDir = claudePath('skills')
+  try {
+    const entries = await fs.readdir(skillsDir, { withFileTypes: true })
+    const dirs = entries.filter(e => e.isDirectory() && !e.name.startsWith('.') && e.name !== 'nebius-skills-workspace')
+    const results: SkillInfo[] = []
+    for (const dir of dirs) {
+      const skillMdPath = path.join(skillsDir, dir.name, 'SKILL.md')
+      let description = ''
+      let triggers = ''
+      let hasSkillMd = false
+      try {
+        const raw = await fs.readFile(skillMdPath, 'utf-8')
+        hasSkillMd = true
+        const descMatch = raw.match(/^#\s+(.+)$/m)
+        if (descMatch) description = descMatch[1].trim()
+        const triggerMatch = raw.match(/(?:TRIGGER|trigger)[^\n]*\n([\s\S]*?)(?:\n#{1,3}\s|\n---|\n\*\*DO NOT|$)/m)
+        if (triggerMatch) triggers = triggerMatch[1].replace(/\s+/g, ' ').trim().slice(0, 200)
+      } catch { /* no SKILL.md */ }
+      results.push({ name: dir.name, description, triggers, hasSkillMd })
+    }
+    return results.sort((a, b) => a.name.localeCompare(b.name))
+  } catch {
+    return []
+  }
+}
+
+// ─── Plugins ──────────────────────────────────────────────────────────────────
+
+export interface PluginInfo {
+  id: string
+  scope: string
+  version: string
+  installedAt: string
+}
+
+export async function readInstalledPlugins(): Promise<PluginInfo[]> {
+  try {
+    const raw = await fs.readFile(claudePath('plugins', 'installed_plugins.json'), 'utf-8')
+    const json = JSON.parse(raw) as { plugins: Record<string, Array<{ scope: string; version: string; installedAt: string }>> }
+    return Object.entries(json.plugins).flatMap(([id, installs]) =>
+      installs.map(inst => ({ id, scope: inst.scope, version: inst.version, installedAt: inst.installedAt }))
+    )
+  } catch {
+    return []
+  }
+}
+
 // ─── Settings ─────────────────────────────────────────────────────────────────
 
 export async function readSettings(): Promise<Record<string, unknown>> {
