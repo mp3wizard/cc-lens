@@ -19,7 +19,7 @@ export async function resolveProjectPath(slug: string): Promise<string> {
   for (const f of files) {
     try {
       const raw = await fs.readFile(f, 'utf-8')
-      const lines = raw.split('\n')
+      const lines = raw.split(/\r?\n/)
       for (const line of lines.slice(0, 50)) {
         if (!line.trim()) continue
         try {
@@ -97,7 +97,7 @@ async function deriveSessionMetaFromJSONL(
 
   try {
     const raw = await fs.readFile(filePath, 'utf-8')
-    const lines = raw.split('\n').filter(Boolean)
+    const lines = raw.split(/\r?\n/).filter(Boolean)
     for (const line of lines) {
       try {
         const obj = JSON.parse(line) as Record<string, unknown>
@@ -299,7 +299,7 @@ export async function readJSONLLines(
 ): Promise<void> {
   try {
     const raw = await fs.readFile(filePath, 'utf-8')
-    for (const line of raw.split('\n')) {
+    for (const line of raw.split(/\r?\n/)) {
       if (!line.trim()) continue
       try {
         cb(JSON.parse(line))
@@ -408,7 +408,7 @@ export async function readHistory(limit = 200): Promise<HistoryEntry[]> {
   const entries: HistoryEntry[] = []
   try {
     const raw = await fs.readFile(claudePath('history.jsonl'), 'utf-8')
-    const lines = raw.split('\n').filter(Boolean)
+    const lines = raw.split(/\r?\n/).filter(Boolean)
     for (const line of lines.slice(-limit)) {
       try {
         entries.push(JSON.parse(line) as HistoryEntry)

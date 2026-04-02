@@ -97,8 +97,9 @@ async function main() {
     ? fs.readFileSync(versionFile, 'utf8').trim()
     : null
 
-  const nextBin = path.join(CACHE_DIR, 'node_modules', '.bin', process.platform === 'win32' ? 'next.cmd' : 'next')
-  const needsSetup = cachedVersion !== pkg.version || !fs.existsSync(nextBin)
+  // Use Next's JS entry (not node_modules/.bin/next[.cmd]) — Windows EINVAL if spawn() tries to exec .cmd without shell.
+  const nextCli = path.join(CACHE_DIR, 'node_modules', 'next', 'dist', 'bin', 'next')
+  const needsSetup = cachedVersion !== pkg.version || !fs.existsSync(nextCli)
 
   if (needsSetup) {
     console.log(`  ${DIM}Setting up (first run, may take a minute)…${R}\n`)
@@ -126,9 +127,11 @@ async function main() {
 
   console.log(`  ${DIM}Starting server on${R} ${O2}${B}${url}${R}\n`)
 
-  const child = spawn(nextBin, ['dev', '--port', String(port)], {
+  // On Windows, mixing 'inherit' + 'pipe' in stdio causes EINVAL. Use 'ignore'
+  // for stdin — Next.js dev server doesn't need user input from stdin.
+  const child = spawn(process.execPath, [nextCli, 'dev', '--port', String(port)], {
     cwd: CACHE_DIR,
-    stdio: ['inherit', 'pipe', 'pipe'],
+    stdio: [process.platform === 'win32' ? 'ignore' : 'inherit', 'pipe', 'pipe'],
     env: { ...process.env, PORT: String(port) },
   })
 
@@ -147,8 +150,9 @@ async function main() {
 
   child.on('exit', (code) => process.exit(code ?? 0))
 
-  process.on('SIGINT',  () => { child.kill('SIGINT');  process.exit(0) })
-  process.on('SIGTERM', () => { child.kill('SIGTERM'); process.exit(0) })
+  // Windows doesn't support SIGINT/SIGTERM — child.kill() (no arg) works cross-platform.
+  process.on('SIGINT',  () => { child.kill(); process.exit(0) })
+  process.on('SIGTERM', () => { child.kill(); process.exit(0) })
 }
 
 main().catch((err) => { console.error(err); process.exit(1) })

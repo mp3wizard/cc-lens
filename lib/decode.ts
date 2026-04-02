@@ -22,7 +22,7 @@ export function pathToSlug(path: string): string {
  */
 export function projectDisplayName(projectPath: string): string {
   if (!projectPath) return 'Unknown'
-  const parts = projectPath.split('/')
+  const parts = projectPath.split(/[\\/]/)
   return parts[parts.length - 1] || parts[parts.length - 2] || projectPath
 }
 
@@ -31,7 +31,7 @@ export function projectDisplayName(projectPath: string): string {
  */
 export function projectShortPath(projectPath: string): string {
   if (!projectPath) return 'Unknown'
-  const parts = projectPath.split('/').filter(Boolean)
+  const parts = projectPath.split(/[\\/]/).filter(Boolean)
   if (parts.length <= 2) return projectPath
   return `.../${parts.slice(-2).join('/')}`
 }
