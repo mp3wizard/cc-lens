@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { SessionBadges } from './session-badges'
 import { formatCost, formatTokens, formatDuration, formatDate, projectDisplayName } from '@/lib/decode'
@@ -43,6 +44,9 @@ export function SessionTable({ sessions }: Props) {
   const [filterAgent, setFilterAgent] = useState(false)
   const [filterMcp, setFilterMcp] = useState(false)
   const [search, setSearch] = useState('')
+  const [focusedIdx, setFocusedIdx] = useState<number | null>(null)
+  const rowRefs = useRef<(HTMLTableRowElement | null)[]>([])
+  const router = useRouter()
 
   const filtered = useMemo(() => {
     let s = sessions
@@ -82,6 +86,41 @@ export function SessionTable({ sessions }: Props) {
 
   const totalPages = Math.ceil(sorted.length / PAGE_SIZE)
   const paginated = sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+
+  // j/k keyboard navigation for rows
+  useEffect(() => {
+    function handler(e: KeyboardEvent) {
+      const el = document.activeElement
+      const tag = el?.tagName.toLowerCase()
+      if (tag === 'input' || tag === 'textarea' || (el as HTMLElement)?.isContentEditable) return
+
+      if (e.key === 'j') {
+        e.preventDefault()
+        setFocusedIdx(i => {
+          const next = i === null ? 0 : Math.min(i + 1, paginated.length - 1)
+          rowRefs.current[next]?.scrollIntoView({ block: 'nearest' })
+          return next
+        })
+      } else if (e.key === 'k') {
+        e.preventDefault()
+        setFocusedIdx(i => {
+          const next = i === null ? 0 : Math.max(i - 1, 0)
+          rowRefs.current[next]?.scrollIntoView({ block: 'nearest' })
+          return next
+        })
+      } else if (e.key === 'Enter' && focusedIdx !== null) {
+        const s = paginated[focusedIdx]
+        if (s) router.push(`/sessions/${s.session_id}`)
+      } else if (e.key === 'Escape' && focusedIdx !== null) {
+        setFocusedIdx(null)
+      }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [focusedIdx, paginated, router])
+
+  // Reset focus when page/filter changes
+  useEffect(() => { setFocusedIdx(null) }, [page, search, filterCompacted, filterAgent, filterMcp])
 
   function toggleSort(key: SortKey) {
     if (sortKey === key) setSortDir(d => d === 'desc' ? 'asc' : 'desc')
@@ -157,7 +196,12 @@ export function SessionTable({ sessions }: Props) {
                 return (
                   <tr
                     key={s.session_id}
-                    className={`border-b border-border/50 hover:bg-muted transition-colors ${i % 2 === 0 ? '' : 'bg-muted/30'}`}
+                    ref={el => { rowRefs.current[i] = el }}
+                    className={[
+                      'border-b border-border/50 hover:bg-muted transition-colors',
+                      i % 2 === 0 ? '' : 'bg-muted/30',
+                      i === focusedIdx ? 'ring-2 ring-primary ring-inset bg-muted' : '',
+                    ].join(' ')}
                   >
                     <td className="px-3 py-2 font-mono text-muted-foreground whitespace-nowrap">
                       {formatDate(s.start_time)}

@@ -30,6 +30,8 @@ That's it. The CLI finds a free port, starts the server, and opens the dashboard
 - **Plans**: Read saved plan files from `~/.claude/plans/` with inline markdown rendering
 - **Settings**: Inspect `~/.claude/settings.json` including installed skills and plugins
 - **Export**: Download `.ccboard.json` or `.zip` with full JSONL; import with additive merge preview
+- **Global Search** (`⌘K` / `Ctrl+K` or `/`): Command palette to search across pages, sessions, projects, plans, and memory entries instantly
+- **Keyboard Navigation**: `j`/`k` to move through the sessions list, `Enter` to open, `Esc` to clear; `g`+letter shortcuts to jump to any page (`g s` → sessions, `g p` → projects, `g c` → costs, etc.)
 
 ## Manual Setup
 

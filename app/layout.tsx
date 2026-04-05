@@ -5,6 +5,7 @@ import './globals.css'
 import { Sidebar } from '@/components/layout/sidebar'
 import { BottomNav } from '@/components/layout/bottom-nav'
 import { ThemeProvider } from '@/components/theme-provider'
+import { KeyboardNavProvider } from '@/components/keyboard-nav-provider'
 
 const geistMono = Geist_Mono({
   variable: '--font-geist-mono',
@@ -45,6 +46,7 @@ export default function RootLayout({
             </main>
           </div>
           <BottomNav />
+          <KeyboardNavProvider />
         </ThemeProvider>
       </body>
     </html>

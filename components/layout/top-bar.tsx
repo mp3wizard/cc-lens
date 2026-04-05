@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { mutate } from 'swr'
-import { Star } from 'lucide-react'
+import { Star, Search } from 'lucide-react'
 
 interface TopBarProps {
   title: string
@@ -61,6 +61,21 @@ export function TopBar({ title, subtitle, showStarButton = false }: TopBarProps)
       </div>
 
       <div className="flex items-center gap-2 md:gap-3">
+        <button
+          onClick={() => window.dispatchEvent(new CustomEvent('open-search'))}
+          className="hidden md:flex items-center gap-2 px-3 py-2 text-sm font-mono border border-border rounded text-muted-foreground hover:text-foreground hover:border-primary/40 transition-colors cursor-pointer"
+        >
+          <Search className="w-3.5 h-3.5" />
+          <span>Search</span>
+          <kbd className="text-[10px] text-muted-foreground/40 border border-border rounded px-1">⌘K</kbd>
+        </button>
+        <button
+          onClick={() => window.dispatchEvent(new CustomEvent('open-search'))}
+          className="flex md:hidden items-center justify-center w-8 h-8 border border-border rounded text-muted-foreground hover:text-foreground hover:border-primary/40 transition-colors cursor-pointer"
+          aria-label="Search"
+        >
+          <Search className="w-4 h-4" />
+        </button>
         <button
           onClick={handleRefresh}
           className={[
