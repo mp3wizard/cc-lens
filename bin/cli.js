@@ -60,7 +60,7 @@ function openBrowser(url) {
 }
 
 // Source dirs/files to mirror into ~/.cc-lens/
-const SRC_DIRS  = ['app', 'components', 'lib', 'types', 'public']
+const SRC_DIRS  = ['app', 'components', 'hooks', 'lib', 'types', 'public']
 const SRC_FILES = ['next.config.ts', 'tsconfig.json', 'postcss.config.mjs', 'components.json']
 
 function syncSource(pkg) {
